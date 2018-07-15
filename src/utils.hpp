@@ -15,7 +15,7 @@
 
 class Utils {
 public:
-    static std::string html_contents(const char* url);
+    static std::string http_response(const char* url, const char* postfields = nullptr);
     static Json::Value get_root_node(std::string contents);
 };
 

@@ -9,14 +9,15 @@
 #ifndef eosflare_hpp
 #define eosflare_hpp
 
+#include <list>
 #include <string>
-#include <unordered_set>
+#include <unordered_map>
 
 class EosFlare {
 public:
-    std::unordered_set<std::string> check_transaction(std::string transactionId);
+    std::unordered_map<std::string, int> transaction_info(std::list<std::string> transactionId);
 private:
-    std::unordered_set<std::string> extract_memos(std::string contents);
+    void extract_memos(std::string contents, std::unordered_map<std::string, int>& memoCount);
 };
 
 #endif /* eosflare_hpp */

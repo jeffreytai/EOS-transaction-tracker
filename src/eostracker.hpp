@@ -15,7 +15,7 @@
 
 class EosTracker {
 public:
-    std::unordered_set<std::string> get_transaction_list();
+    std::unordered_set<std::string> get_transaction_list(int limit = 0);
     
 private:
     std::unordered_set<std::string> extract_transactions(std::string);

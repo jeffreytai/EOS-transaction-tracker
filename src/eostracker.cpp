@@ -13,17 +13,17 @@
 #include <iostream>
 #include <sstream>
 
-std::unordered_set<std::string> EosTracker::get_transaction_list() {
+std::unordered_set<std::string> EosTracker::get_transaction_list(int limit) {
     std::unordered_set<std::string> transactionCollection;
 
     int page = 1;
     while (true) {
         std::ostringstream urlBuilder;
-        urlBuilder << "https://api.eostracker.io/transactions?page=" << page++ << "&size=1000";
+        urlBuilder << "https://api.eostracker.io/transactions?page=" << page++ << "&size=10000";
         std::string url = urlBuilder.str();
 
         printf("Extracting transactions from %s\n", url.c_str());
-        std::string contents = Utils::html_contents(url.c_str());
+        std::string contents = Utils::http_response(url.c_str());
         std::unordered_set<std::string> batch = extract_transactions(contents);
 
         if (batch.empty()) {
@@ -31,7 +31,9 @@ std::unordered_set<std::string> EosTracker::get_transaction_list() {
         }
         transactionCollection.insert(batch.begin(), batch.end());
 
-        break;
+        if (limit == page) {
+            break;
+        }
     }
     
     return transactionCollection;

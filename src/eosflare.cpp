@@ -13,27 +13,57 @@
 #include <iostream>
 #include <sstream>
 
-std::unordered_set<std::string> EosFlare::check_transaction(std::string transactionId) {
-    std::unordered_set<std::string> memoCollection;
+std::unordered_map<std::string, int> EosFlare::transaction_info(std::list<std::string> transactionIds) {
+    std::unordered_map<std::string, int> totalMemoCount;
 
-    std::ostringstream urlBuilder;
-    urlBuilder << "https://eosflare.io/tx/" << transactionId;
-    std::string url = urlBuilder.str();
+    int count = 0;
+    for (std::string transactionId : transactionIds) {
+        // TODO: Maybe cycle between a couple API endpoints in case of rate limiting
+        std::string url = "http://api.eosnewyork.io/v1/history/get_transaction";
 
-    printf("Extracting memos from %s\n", url.c_str());
-    std::string contents = Utils::html_contents(url.c_str());
-    extract_memos(contents);
+        std::ostringstream postfieldsBuilder;
+        postfieldsBuilder << "{\"id\": \"" << transactionId << "\", \"json\": \"true\"}";
+        std::string postfields = postfieldsBuilder.str();
 
-    return memoCollection;
+        printf("Extracting memos for transaction %s\n", transactionId.c_str());
+        std::string response = Utils::http_response(url.c_str(), postfields.c_str());
+        extract_memos(response, totalMemoCount);
+
+        printf("Current number of distinct memos: %lu\n", totalMemoCount.size());
+        printf("Processed %d transactions\n", ++count);
+
+        if (count % 5 == 0) {
+            for (auto elem : totalMemoCount) {
+                std::cout << elem.first << ": " << elem.second << std::endl;
+            }
+        }
+    }
+
+    return totalMemoCount;
 }
 
-std::unordered_set<std::string> EosFlare::extract_memos(std::string contents) {
-    std::unordered_set<std::string> memos;
+void EosFlare::extract_memos(std::string contents, std::unordered_map<std::string, int>& memoCount) {
 
     Json::StreamWriterBuilder writer;
-    std::cout << contents << std::endl;
-    
-    // TODO: Collect memos from transactions
+    Json::Value root = Utils::get_root_node(contents);
 
-    return memos;
+    if (!root.empty()) {
+        Json::Value actions = root["trx"]["trx"]["actions"];
+
+        for (Json::Value::ArrayIndex i=0; i != actions.size(); ++i) {
+            Json::Value memo = actions[i]["data"];
+            try {
+                if (memo.isMember("memo")) {
+                    std::string unsanitizedMessage = Json::writeString(writer, memo["memo"]);
+                    std::string message = unsanitizedMessage.substr(1, unsanitizedMessage.size() - 2);
+
+                    int& count = memoCount[message];
+                    if (count) ++count;
+                    else count = 1;
+                }
+            } catch (Json::LogicError er) {
+
+            }
+        }
+    }
 }

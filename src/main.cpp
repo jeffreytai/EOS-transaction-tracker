@@ -13,12 +13,12 @@
 
 int main(int argc, const char * argv[]) {
     // EosTracker *tracker = new EosTracker();
-    // std::unordered_set<std::string> transactions = tracker->get_transaction_list();
-
-    // delete tracker;
-
+    // std::unordered_set<std::string> transactions = tracker->get_transaction_list(10);
+    
     EosFlare *flare = new EosFlare();
-    flare->check_transaction("a1509de7e1867804e3aa573355636c34cd3cf51728256651f771e69497e7e158");
+    // flare->transaction_info(std::list<std::string> (std::begin(transactions), std::end(transactions)));
+    flare->transaction_info(std::list<std::string> {"c8657eacb5f3a2f6246909d12828fb90cbbf232b320ae0ec095be4eed3cfc6dc"});
     
     delete flare;
+    // delete tracker;
 }
