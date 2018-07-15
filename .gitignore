@@ -1,0 +1,8 @@
+# Mac attributes
+.DS_Store
+
+# Visual Studio Code generated files
+.vscode
+
+# Conan build
+build/
