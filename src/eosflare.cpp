@@ -27,8 +27,13 @@ std::unordered_map<std::string, int> EosFlare::transaction_info(std::list<std::s
 
         printf("Extracting memos for transaction %s\n", transactionId.c_str());
         std::string response = Utils::http_response(url.c_str(), postfields.c_str());
-        extract_memos(response, totalMemoCount);
-
+        try {
+            extract_memos(response, totalMemoCount);
+        } catch (Json::LogicError e) {
+            printf("Skipping transaction %s\n", transactionId.c_str());
+            continue;
+        }
+        
         printf("Current number of distinct memos: %lu\n", totalMemoCount.size());
         printf("Processed %d transactions\n", ++count);
 
@@ -52,17 +57,13 @@ void EosFlare::extract_memos(std::string contents, std::unordered_map<std::strin
 
         for (Json::Value::ArrayIndex i=0; i != actions.size(); ++i) {
             Json::Value memo = actions[i]["data"];
-            try {
-                if (memo.isMember("memo")) {
-                    std::string unsanitizedMessage = Json::writeString(writer, memo["memo"]);
-                    std::string message = unsanitizedMessage.substr(1, unsanitizedMessage.size() - 2);
+            if (memo.isMember("memo")) {
+                std::string unsanitizedMessage = Json::writeString(writer, memo["memo"]);
+                std::string message = unsanitizedMessage.substr(1, unsanitizedMessage.size() - 2);
 
-                    int& count = memoCount[message];
-                    if (count) ++count;
-                    else count = 1;
-                }
-            } catch (Json::LogicError er) {
-
+                int& count = memoCount[message];
+                if (count) ++count;
+                else count = 1;
             }
         }
     }

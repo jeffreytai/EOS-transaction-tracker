@@ -24,8 +24,14 @@ std::unordered_set<std::string> EosTracker::get_transaction_list(int limit) {
 
         printf("Extracting transactions from %s\n", url.c_str());
         std::string contents = Utils::http_response(url.c_str());
-        std::unordered_set<std::string> batch = extract_transactions(contents);
-
+        std::unordered_set<std::string> batch;
+        try {
+            batch = extract_transactions(contents);
+        } catch (Json::LogicError e) {
+            printf("Skipping url %s\n", url.c_str());
+            continue;
+        }
+        
         if (batch.empty()) {
             break;
         }
